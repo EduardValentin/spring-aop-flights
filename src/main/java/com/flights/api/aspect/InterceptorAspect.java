@@ -20,9 +20,4 @@ public class InterceptorAspect {
 		logger.info("AspectJ intercept: " + joinPoint.toShortString());
 	}
 
-//	@Around("execution(* *(..)) && within(com.flights.api..*) && !within(com.flights.api.aspect.InterceptorAspect+)")
-//	public Object stack(ProceedingJoinPoint joinPoint) throws Throwable {
-//		logger.info("AspectJ stack: " + joinPoint.toShortString());
-//		return joinPoint.proceed();
-//	}
 }

@@ -9,19 +9,24 @@ import com.flights.api.model.Avion;
 import com.flights.api.model.Client;
 import com.flights.api.model.Loc;
 import com.flights.api.model.Rezervare;
+import com.flights.api.model.StatusRezervare;
 import com.flights.api.model.Zbor;
 import com.flights.api.repository.AvionRepository;
 import com.flights.api.repository.ClientRepository;
 import com.flights.api.repository.LocRepository;
 import com.flights.api.repository.RezervareRepository;
+import com.flights.api.repository.StatusRezervareRepository;
 import com.flights.api.repository.ZborRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class RezervareService {
 
     private final RezervareRepository rezervareRepository;
@@ -32,8 +37,13 @@ public class RezervareService {
     private final DTOMapper dtoMapper;
     private final EntityMapper entityMapper;
     private final ClientService clientService;
+    private final StatusRezervareRepository statusRezervareRepository;
 
-    public RezervareService(RezervareRepository rezervareRepository, ClientRepository clientRepository, ZborRepository zborRepository, LocRepository locRepository, AvionRepository avionRepository, DTOMapper dtoMapper, EntityMapper entityMapper, ClientService clientService) {
+    public RezervareService(RezervareRepository rezervareRepository, ClientRepository clientRepository,
+                            ZborRepository zborRepository, LocRepository locRepository, AvionRepository avionRepository,
+                            DTOMapper dtoMapper, EntityMapper entityMapper, ClientService clientService,
+                            StatusRezervareRepository statusRezervareRepository) {
+
         this.rezervareRepository = rezervareRepository;
         this.clientRepository = clientRepository;
         this.zborRepository = zborRepository;
@@ -42,6 +52,7 @@ public class RezervareService {
         this.dtoMapper = dtoMapper;
         this.entityMapper = entityMapper;
         this.clientService = clientService;
+        this.statusRezervareRepository = statusRezervareRepository;
     }
 
     public List<RezervareViewDto> findAll() {
@@ -54,9 +65,6 @@ public class RezervareService {
         ClientDto clientDto = rezervareDto.getClient();
 
         Zbor zbor = zborRepository.findById(rezervareDto.getIdZbor())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-
-        Avion avion = avionRepository.findById(rezervareDto.getIdAvion())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 
         Loc loc = locRepository.findById(rezervareDto.getIdLoc())
@@ -76,14 +84,20 @@ public class RezervareService {
                     return clientService.create(clientToCreate);
                 });
 
+        StatusRezervare statusRezervare = statusRezervareRepository.findByDenumire(rezervareDto.getStatus())
+                .orElseThrow(() -> {
+                    log.warn("Status: " + rezervareDto.getStatus() + " not found in database");
+                    return new ResponseStatusException(HttpStatus.BAD_REQUEST);
+                });
+
         Rezervare rezervare = Rezervare.builder()
-                .avion(avion)
                 .client(client)
                 .discount(rezervareDto.getDiscount())
                 .loc(loc)
                 .pret(rezervareDto.getPret())
-                .status(rezervareDto.getStatus())
+                .statusRezervare(statusRezervare)
                 .zbor(zbor)
+                .data(LocalDateTime.now())
                 .build();
 
         rezervare = rezervareRepository.save(rezervare);

@@ -35,11 +35,17 @@ public class DTOMapper {
 
     public AvionViewDto toAvionDTO(Avion avion) {
 
+        List<LocViewDto> locuri = avion.getLocuri()
+                .stream()
+                .map(this::toLocViewDto)
+                .collect(toList());
+
         MarcaDto marcaDTO = toMarcaDTO(avion.getMarcaAvion());
         return AvionViewDto.builder()
                 .id(avion.getIdAvion())
                 .greutateTone(avion.getGreutateTone())
                 .locuriMaxime(avion.getLocuriMaxime())
+                .locuri(locuri)
                 .marca(marcaDTO)
                 .build();
     }
@@ -134,13 +140,12 @@ public class DTOMapper {
     public RezervareViewDto toRezervareViewDto(Rezervare rezervare) {
 
         return RezervareViewDto.builder()
-                .avion(toAvionDTO(rezervare.getAvion()))
                 .client(toClientViewDto(rezervare.getClient()))
                 .discount(rezervare.getDiscount())
                 .idRezervare(rezervare.getIdRezervare())
                 .loc(rezervare.getLoc())
                 .pret(rezervare.getPret())
-                .status(rezervare.getStatus())
+                .status(rezervare.getStatusRezervare().getDenumire())
                 .zbor(toZborViewDto(rezervare.getZbor()))
                 .build();
     }

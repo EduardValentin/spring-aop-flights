@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Form, Button} from "react-bootstrap";
-import {Link} from "react-router-dom";
+import {Link, Redirect} from "react-router-dom";
 import Select from "react-select";
 
 const CreateReservationPage = ({
@@ -63,8 +63,9 @@ const CreateReservationPage = ({
 
   let airplaneSeatsOptions = [];
 
-  if (airplane) {
-    const seats = airplanes.data.find((a) => a.id === airplane.value).seats;
+  if (flight) {
+    const seats = flights.data.find((f) => f.idZbor === flight.value).avion.locuri;
+
     if (seats) {
       airplaneSeatsOptions = seats.map((s) => ({
         value: s.idLoc,
@@ -73,6 +74,9 @@ const CreateReservationPage = ({
     }
   }
 
+  if (shouldRedirect) {
+    return <Redirect to="/reservations" />
+  }
   return (
     <div className="CreateReservationPage w-50 mx-5 my-5">
       <Link className="btn btn-secondary mb-5" to="/reservations">
@@ -89,20 +93,6 @@ const CreateReservationPage = ({
               setFlight(sel);
             }}
             name="flight"
-          />
-        </div>
-
-        <div className="my-2">
-          <div className="my-1">Avion:</div>
-          <Select
-            options={airplaneOptions}
-            placeholder="Alege avion"
-            onChange={(sel) => {
-              fetchAirplaneSeats(sel.value).then(() => {
-                setAirplane(sel);
-              });
-            }}
-            name="airplane"
           />
         </div>
 
@@ -243,7 +233,6 @@ const CreateReservationPage = ({
           onClick={() => {
             createReservation({
               idZbor: flight.value,
-              idAvion: airplane.value,
               client: showNewClientForm ? client : {cnp: client.value},
               idLoc: loc.value,
               pret,
